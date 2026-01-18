@@ -1,0 +1,218 @@
+
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  Archive,
+  FileText,
+  Inbox,
+  Send,
+  Trash2,
+  Settings,
+  HelpCircle,
+  Gift,
+  Search,
+  Users,
+} from 'lucide-react';
+import {
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+} from '@/components/ui/sidebar';
+import { Badge } from './ui/badge';
+import { UserNav } from './user-nav';
+import { Input } from './ui/input';
+import { cn } from '@/lib/utils';
+import { useMailCounts } from '@/hooks/use-mail-counts';
+import { useMailLabels } from '@/hooks/use-mail-labels';
+import { ThemeToggle } from './theme-toggle';
+import { ScrollArea } from './ui/scroll-area';
+
+export function SidebarNav() {
+  const pathname = usePathname();
+  const counts = useMailCounts();
+
+  const mainLinks = [
+    { name: 'Sent', href: '/sent', icon: Send, count: counts.sent },
+    { name: 'Drafts', href: '/drafts', icon: FileText, count: counts.drafts },
+    { name: 'Spam', href: '/spam', icon: Users, count: counts.spam },
+    { name: 'Archive', href: '/archive', icon: Archive, count: counts.archive },
+    { name: 'Trash', href: '/trash', icon: Trash2, count: counts.trash },
+  ];
+
+  const labelLinks = useMailLabels();
+
+  const bottomLinks = [
+    { name: 'Help Center', href: '/help', icon: HelpCircle },
+  ];
+
+  const subNavItems = [
+    {
+      name: 'All Messages',
+      href: '/mail',
+      count: counts.all,
+    },
+    {
+      name: 'Already Read',
+      href: '/read',
+      count: counts.read,
+    },
+    {
+      name: 'Unread',
+      href: '/unread',
+      count: counts.unread,
+    },
+  ];
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="p-2 group-data-[collapsible=icon]/sidebar:hidden">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search..." className="bg-background pl-8" />
+        </div>
+      </div>
+      
+      <ScrollArea className="flex-1 px-2">
+        <div className="flex flex-col gap-2 pb-4">
+          <SidebarMenu className="px-2">
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={['/mail', '/read', '/unread'].includes(pathname)}
+                tooltip="Inbox"
+                asChild
+              >
+                <Link href="/mail">
+                  <Inbox />
+                  <span className="group-data-[collapsible=icon]/sidebar:hidden">Inbox</span>
+                </Link>
+              </SidebarMenuButton>
+              <SidebarMenuSub>
+                {subNavItems.map((item) => (
+                  <SidebarMenuSubItem key={item.name}>
+                    <SidebarMenuSubButton
+                      asChild
+                      isActive={pathname === item.href}
+                    >
+                      <Link href={item.href}>
+                        <span className="group-data-[collapsible=icon]/sidebar:hidden">{item.name}</span>
+                        {item.count && item.count > 0 ? (
+                          <Badge
+                            variant="secondary"
+                            className="ml-auto group-data-[collapsible=icon]/sidebar:hidden"
+                          >
+                            {item.count}
+                          </Badge>
+                        ) : null}
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/claim'}
+                tooltip={'Claim'}
+              >
+                <Link href="/claim" className="w-full">
+                  <Gift />
+                  <span className="group-data-[collapsible=icon]/sidebar:hidden">Claim</span>
+                  {(counts.claim || 0) > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-auto group-data-[collapsible=icon]/sidebar:hidden"
+                    >
+                      {counts.claim}
+                    </Badge>
+                  )}
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            {mainLinks.map((link) => (
+              <SidebarMenuItem key={link.name}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === link.href}
+                  tooltip={link.name}
+                >
+                  <Link href={link.href} className="w-full">
+                    <link.icon />
+                    <span className="group-data-[collapsible=icon]/sidebar:hidden">{link.name}</span>
+                    {(link.count || 0) > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-auto group-data-[collapsible=icon]/sidebar:hidden"
+                      >
+                        {link.count}
+                      </Badge>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+          <div className="h-px bg-gradient-to-r from-transparent via-muted-foreground/20 to-transparent my-2" />
+          <SidebarGroup className="px-2 group-data-[collapsible=icon]/sidebar:hidden">
+            <SidebarGroupLabel>Labels</SidebarGroupLabel>
+            <SidebarMenu className="px-2">
+              {labelLinks.map((link) => (
+                <SidebarMenuItem key={link.name}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === `/label/${encodeURIComponent(link.name)}`}
+                    tooltip={link.name}
+                  >
+                    <Link href={`/label/${encodeURIComponent(link.name)}`} className="w-full">
+                      <div className={`h-2 w-2 rounded-full ${link.color}`} />
+                      <span className="group-data-[collapsible=icon]/sidebar:hidden">{link.name}</span>
+                      {(link.count || 0) > 0 && (
+                        <Badge
+                          variant="secondary"
+                          className="ml-auto group-data-[collapsible=icon]/sidebar:hidden"
+                        >
+                          {link.count}
+                        </Badge>
+                      )}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        </div>
+      </ScrollArea>
+
+      <div className="mt-auto shadow-[0_-2px_4px_-1px_rgba(0,0,0,0.1)]">
+        <SidebarMenu className="p-2">
+          {bottomLinks.map((link) => (
+            <SidebarMenuItem key={link.name}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === link.href}
+                tooltip={link.name}
+              >
+                <Link href={link.href} className="w-full">
+                  <link.icon />
+                  <span className="group-data-[collapsible=icon]/sidebar:hidden">{link.name}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+        <div className="h-px bg-gradient-to-r from-transparent via-muted-foreground/20 to-transparent my-2" />
+        <div className="p-2">
+          <UserNav />
+        </div>
+      </div>
+    </div>
+  );
+}
